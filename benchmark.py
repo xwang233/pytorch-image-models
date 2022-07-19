@@ -22,7 +22,7 @@ import torch.nn.parallel
 from timm.data import resolve_data_config
 from timm.models import create_model, is_model, list_models
 from timm.optim import create_optimizer_v2
-from timm.utils import setup_default_logging, set_jit_fuser
+from timm.utils import setup_default_logging, set_jit_fuser, decay_batch_step, check_batch_size_retry
 
 if os.getenv('TIMM_BENCHMARK_ENABLE_TORCHDYNAMO') == '1':
     import torchdynamo
@@ -563,22 +563,19 @@ class ProfileRunner(BenchmarkRunner):
         return results
 
 
-def decay_batch_exp(batch_size, factor=0.5, divisor=16):
-    out_batch_size = batch_size * factor
-    if out_batch_size > divisor:
-        out_batch_size = (out_batch_size + 1) // divisor * divisor
-    else:
-        out_batch_size = batch_size - 1
-    return max(0, int(out_batch_size))
-
-
-def _try_run(model_name, bench_fn, bench_kwargs, initial_batch_size, no_batch_size_retry=False):
+def _try_run(
+        model_name,
+        bench_fn,
+        bench_kwargs,
+        initial_batch_size,
+        no_batch_size_retry=False
+):
     batch_size = initial_batch_size
     results = dict()
     error_str = 'Unknown'
-    while batch_size >= 1:
-        torch.cuda.empty_cache()
+    while batch_size:
         try:
+            torch.cuda.empty_cache()
             bench = bench_fn(model_name=model_name, batch_size=batch_size, **bench_kwargs)
             if os.getenv('TIMM_BENCHMARK_ENABLE_TORCHDYNAMO') == '1':
                 with torchdynamo.optimize(aot_autograd_speedup_strategy):
@@ -588,13 +585,13 @@ def _try_run(model_name, bench_fn, bench_kwargs, initial_batch_size, no_batch_si
             return results
         except RuntimeError as e:
             error_str = str(e)
-            if 'channels_last' in error_str:
-                _logger.error(f'{model_name} not supported in channels_last, skipping.')
-                break
             _logger.error(f'"{error_str}" while running benchmark.')
+            if not check_batch_size_retry(error_str):
+                _logger.error(f'Unrecoverable error encountered while benchmarking {model_name}, skipping.')
+                break
             if no_batch_size_retry:
                 raise
-        batch_size = decay_batch_exp(batch_size)
+        batch_size = decay_batch_step(batch_size)
         _logger.warning(f'Reducing batch size to {batch_size} for retry.')
     results['error'] = error_str
     return results
@@ -647,6 +644,8 @@ def benchmark(args):
         if prefix and 'error' not in run_results:
             run_results = {'_'.join([prefix, k]): v for k, v in run_results.items()}
         model_results.update(run_results)
+        if 'error' in run_results:
+            break
     if 'error' not in model_results:
         param_count = model_results.pop('infer_param_count', model_results.pop('train_param_count', 0))
         model_results.setdefault('param_count', param_count)
