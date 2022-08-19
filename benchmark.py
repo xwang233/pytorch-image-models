@@ -69,7 +69,8 @@ torch.set_float32_matmul_precision('high')
 torch.backends.cudnn.benchmark = True
 _logger = logging.getLogger('validate')
 
-if os.getenv('TIMM_BENCHMARK_NVFUSER_SKIP_NODE_KINDS'):
+if len(os.getenv('TIMM_BENCHMARK_NVFUSER_SKIP_NODE_KINDS', '')) > 0:
+    print('yes')
     import traceback
     import sys
     node_kinds = os.getenv('TIMM_BENCHMARK_NVFUSER_SKIP_NODE_KINDS').split(';')
