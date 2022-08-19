@@ -70,7 +70,6 @@ torch.backends.cudnn.benchmark = True
 _logger = logging.getLogger('validate')
 
 if len(os.getenv('TIMM_BENCHMARK_NVFUSER_SKIP_NODE_KINDS', '')) > 0:
-    print('yes')
     import traceback
     import sys
     node_kinds = os.getenv('TIMM_BENCHMARK_NVFUSER_SKIP_NODE_KINDS').split(';')
