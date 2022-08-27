@@ -26,7 +26,6 @@ from timm.utils import setup_default_logging, set_jit_fuser, decay_batch_step, c
 
 if os.getenv('TIMM_BENCHMARK_ENABLE_TORCHDYNAMO') == '1':
     import torchdynamo
-    from torchdynamo.optimizations.training import aot_autograd_speedup_strategy
 
 if os.getenv('TIMM_BENCHMARK_ENABLE_AOT_AUTOGRAD') == '1':
     from functorch.compile import memory_efficient_fusion
@@ -579,7 +578,7 @@ def _try_run(
             torch.cuda.empty_cache()
             bench = bench_fn(model_name=model_name, batch_size=batch_size, **bench_kwargs)
             if os.getenv('TIMM_BENCHMARK_ENABLE_TORCHDYNAMO') == '1':
-                with torchdynamo.optimize(aot_autograd_speedup_strategy):
+                with torchdynamo.optimize('aot_nvfuser'):
                     results = bench.run()
             else:
                 results = bench.run()
