@@ -20,7 +20,7 @@ import torch.nn as nn
 import torch.nn.parallel
 
 from timm.data import resolve_data_config
-from timm.models import create_model, is_model, list_models
+from timm.models import create_model, is_model, list_models, set_fast_norm
 from timm.optim import create_optimizer_v2
 from timm.utils import setup_default_logging, set_jit_fuser, decay_batch_step, check_batch_size_retry
 
@@ -132,7 +132,8 @@ scripting_group.add_argument('--torchscript', dest='torchscript', action='store_
                     help='convert model torchscript for inference')
 scripting_group.add_argument('--aot-autograd', default=False, action='store_true',
                     help="Enable AOT Autograd support. (It's recommended to use this option with `--fuser nvfuser` together)")
-
+scripting_group.add_argument('--fast-norm', default=False, action='store_true',
+                    help='enable experimental fast-norm')
 
 # train optimizer parameters
 parser.add_argument('--opt', default='sgd', type=str, metavar='OPTIMIZER',
@@ -661,6 +662,9 @@ def main():
 
     if os.getenv('TIMM_BENCHMARK_RAISE_IF_FAILED', '0') == '1':
         args.no_retry = True
+
+    if args.fast_norm:
+        set_fast_norm()
 
     if args.model_list:
         args.model = ''
