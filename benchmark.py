@@ -407,6 +407,15 @@ class TrainBenchmarkRunner(BenchmarkRunner):
             (batch_size,) + self.target_shape, device=self.device, dtype=torch.long).random_(self.num_classes)
 
     def run(self):
+        def _warmup():
+            with self.amp_autocast():
+                output = self.model(self.example_inputs)
+                if isinstance(output, tuple):
+                    output = output[0]
+                target = self._gen_target(output.shape[0])
+                l = self.loss(output, target)
+                l.backward()
+
         def _step(detail=False, sync=True):
             self.optimizer.zero_grad()  # can this be ignored?
             t_start = self.time_fn()
@@ -438,9 +447,6 @@ class TrainBenchmarkRunner(BenchmarkRunner):
             f'input size {self.input_size} and batch size {self.batch_size}.')
 
         self._init_input()
-
-        for _ in range(self.num_warm_iter):
-            _step()
         
         if os.getenv('TIMM_BENCHMARK_ENABLE_CUDAGRAPH') == '1':
             assert self.detail is False, \
@@ -448,13 +454,16 @@ class TrainBenchmarkRunner(BenchmarkRunner):
             s = torch.cuda.Stream()
             s.wait_stream(torch.cuda.current_stream())
             with torch.cuda.stream(s):
-                for _ in range(3):
-                    _step(sync=False)
+                for _ in range(self.num_warm_iter):
+                    _warmup()
             torch.cuda.current_stream().wait_stream(s)
 
             g = torch.cuda.CUDAGraph()
             with torch.cuda.graph(g):
                 _step(sync=False)
+        else:
+            for _ in range(self.num_warm_iter):
+                _step()
 
         t_run_start = self.time_fn(True)
         if self.detail:
