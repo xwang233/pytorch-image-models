@@ -272,6 +272,9 @@ class BenchmarkRunner:
             assert has_functorch, "functorch is needed for --aot-autograd"
             self.model = memory_efficient_fusion(self.model)
 
+        if os.getenv('TIMM_BENCHMARK_ENABLE_TORCHDYNAMO') == '1':
+            self.model = torchdynamo.optimize('aot_nvfuser')(self.model)
+
         self.example_inputs = None
         self.num_warm_iter = num_warm_iter
         self.num_bench_iter = num_bench_iter
@@ -586,11 +589,7 @@ def _try_run(
         try:
             torch.cuda.empty_cache()
             bench = bench_fn(model_name=model_name, batch_size=batch_size, **bench_kwargs)
-            if os.getenv('TIMM_BENCHMARK_ENABLE_TORCHDYNAMO') == '1':
-                with torchdynamo.optimize('aot_nvfuser'):
-                    results = bench.run()
-            else:
-                results = bench.run()
+            results = bench.run()
             return results
         except RuntimeError as e:
             error_str = str(e)
