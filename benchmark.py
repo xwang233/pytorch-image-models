@@ -51,10 +51,10 @@ except ImportError as e:
     has_fvcore_profiling = False
 
 try:
-    from functorch.compile import memory_efficient_fusion
-    has_functorch = True
+    import torchdynamo
+    has_torchdynamo = True
 except ImportError as e:
-    has_functorch = False
+    has_torchdynamo = False
 
 
 torch.backends.cudnn.benchmark = True
@@ -111,7 +111,7 @@ scripting_group = parser.add_mutually_exclusive_group()
 scripting_group.add_argument('--torchscript', dest='torchscript', action='store_true',
                     help='convert model torchscript for inference')
 scripting_group.add_argument('--aot-autograd', default=False, action='store_true',
-                    help="Enable AOT Autograd support. (It's recommended to use this option with `--fuser nvfuser` together)")
+                    help="Enable AOT Autograd + nvfuser support.")
 
 # train optimizer parameters
 parser.add_argument('--opt', default='sgd', type=str, metavar='OPTIMIZER',
@@ -248,8 +248,8 @@ class BenchmarkRunner:
         self.batch_size = kwargs.pop('batch_size', 256)
 
         if aot_autograd:
-            assert has_functorch, "functorch is needed for --aot-autograd"
-            self.model = memory_efficient_fusion(self.model)
+            assert has_torchdynamo, "torchdynamo is needed for --aot-autograd"
+            self.model = torchdynamo.optimize('aot_nvfuser')(self.model)
 
         self.example_inputs = None
         self.num_warm_iter = num_warm_iter

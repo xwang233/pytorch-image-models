@@ -60,10 +60,10 @@ except ImportError:
     has_wandb = False
 
 try:
-    from functorch.compile import memory_efficient_fusion
-    has_functorch = True
+    import torchdynamo
+    has_torchdynamo = True
 except ImportError as e:
-    has_functorch = False
+    has_torchdynamo = False
 
 
 torch.backends.cudnn.benchmark = True
@@ -132,7 +132,7 @@ scripting_group = group.add_mutually_exclusive_group()
 scripting_group.add_argument('--torchscript', dest='torchscript', action='store_true',
                     help='torch.jit.script the full model')
 scripting_group.add_argument('--aot-autograd', default=False, action='store_true',
-                    help="Enable AOT Autograd support. (It's recommended to use this option with `--fuser nvfuser` together)")
+                    help="Enable AOT Autograd + nvfuser support.")
 group.add_argument('--fuser', default='', type=str,
                     help="Select jit fuser. One of ('', 'te', 'old', 'nvfuser')")
 group.add_argument('--fast-norm', default=False, action='store_true',
@@ -462,8 +462,8 @@ def main():
         assert not args.sync_bn, 'Cannot use SyncBatchNorm with torchscripted model'
         model = torch.jit.script(model)
     if args.aot_autograd:
-        assert has_functorch, "functorch is needed for --aot-autograd"
-        model = memory_efficient_fusion(model)
+        assert has_torchdynamo, "torchdynamo is needed for --aot-autograd"
+        model = torchdynamo.optimize('aot_nvfuser')(model)
 
     optimizer = create_optimizer_v2(model, **optimizer_kwargs(cfg=args))
 
