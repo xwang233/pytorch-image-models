@@ -104,13 +104,14 @@ parser.add_argument('--precision', default='float32', type=str,
                     help='Numeric precision. One of (amp, float32, float16, bfloat16, tf32)')
 parser.add_argument('--fuser', default='', type=str,
                     help="Select jit fuser. One of ('', 'te', 'old', 'nvfuser')")
+parser.add_argument('--fast-norm', default=False, action='store_true',
+                    help='enable experimental fast-norm')
+
 scripting_group = parser.add_mutually_exclusive_group()
 scripting_group.add_argument('--torchscript', dest='torchscript', action='store_true',
                     help='convert model torchscript for inference')
 scripting_group.add_argument('--aot-autograd', default=False, action='store_true',
                     help="Enable AOT Autograd support. (It's recommended to use this option with `--fuser nvfuser` together)")
-scripting_group.add_argument('--fast-norm', default=False, action='store_true',
-                    help='enable experimental fast-norm')
 
 # train optimizer parameters
 parser.add_argument('--opt', default='sgd', type=str, metavar='OPTIMIZER',
