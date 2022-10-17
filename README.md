@@ -21,6 +21,36 @@ And a big thanks to all GitHub sponsors who helped with some of my costs before 
 
 ## What's New
 
+### Oct 15, 2022
+* Train and validation script enhancements
+* Non-GPU (ie CPU) device support
+* SLURM compatibility for train script
+* HF datasets support (via ReaderHfds)
+* TFDS/WDS dataloading improvements (sample padding/wrap for distributed use fixed wrt sample count estimate)
+* in_chans !=3 support for scripts / loader
+* Adan optimizer
+* Can enable per-step LR scheduling via args
+* Dataset 'parsers' renamed to 'readers', more descriptive of purpose
+* AMP args changed, APEX via `--amp-impl apex`, bfloat16 supportedf via `--amp-dtype bfloat16`
+* main branch switched to 0.7.x version, 0.6x forked for stable release of weight only adds
+* master -> main branch rename
+
+### Oct 10, 2022
+* More weights in `maxxvit` series, incl first ConvNeXt block based `coatnext` and `maxxvit` experiments:
+  * `coatnext_nano_rw_224` - 82.0 @ 224 (G) -- (uses ConvNeXt conv block, no BatchNorm)
+  * `maxxvit_rmlp_nano_rw_256` - 83.0 @ 256, 83.7 @ 320  (G) (uses ConvNeXt conv block, no BN)
+  * `maxvit_rmlp_small_rw_224` - 84.5 @ 224, 85.1 @ 320 (G)
+  * `maxxvit_rmlp_small_rw_256` - 84.6 @ 256, 84.9 @ 288 (G) -- could be trained better, hparams need tuning (uses ConvNeXt block, no BN)
+  * `coatnet_rmlp_2_rw_224` - 84.6 @ 224, 85 @ 320  (T)
+  * NOTE: official MaxVit weights (in1k) have been released at https://github.com/google-research/maxvit -- some extra work is needed to port and adapt since my impl was created independently of theirs and has a few small differences + the whole TF same padding fun.
+  
+### Sept 23, 2022
+* LAION-2B CLIP image towers supported as pretrained backbones for fine-tune or features (no classifier)
+  * vit_base_patch32_224_clip_laion2b
+  * vit_large_patch14_224_clip_laion2b
+  * vit_huge_patch14_224_clip_laion2b
+  * vit_giant_patch14_224_clip_laion2b
+
 ### Sept 7, 2022
 * Hugging Face [`timm` docs](https://huggingface.co/docs/hub/timm) home now exists, look for more here in the future
 * Add BEiT-v2 weights for base and large 224x224 models from https://github.com/microsoft/unilm/tree/master/beit2
@@ -112,7 +142,7 @@ More models, more fixes
 * `cs3`, `darknet`, and `vit_*relpos` weights above all trained on TPU thanks to TRC program! Rest trained on overheating GPUs.
 * Hugging Face Hub support fixes verified, demo notebook TBA
 * Pretrained weights / configs can be loaded externally (ie from local disk) w/ support for head adaptation.
-* Add support to change image extensions scanned by `timm` datasets/parsers. See (https://github.com/rwightman/pytorch-image-models/pull/1274#issuecomment-1178303103)
+* Add support to change image extensions scanned by `timm` datasets/readers. See (https://github.com/rwightman/pytorch-image-models/pull/1274#issuecomment-1178303103)
 * Default ConvNeXt LayerNorm impl to use `F.layer_norm(x.permute(0, 2, 3, 1), ...).permute(0, 3, 1, 2)` via `LayerNorm2d` in all cases. 
   * a bit slower than previous custom impl on some hardware (ie Ampere w/ CL), but overall fewer regressions across wider HW / PyTorch version ranges. 
   * previous impl exists as `LayerNormExp2d` in `models/layers/norm.py`
