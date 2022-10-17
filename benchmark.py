@@ -117,6 +117,8 @@ parser.add_argument('--num-classes', type=int, default=None,
                     help='Number classes in dataset')
 parser.add_argument('--gp', default=None, type=str, metavar='POOL',
                     help='Global pool type, one of (fast, avg, max, avgmax, avgmaxc). Model default if None.')
+parser.add_argument('--fast-norm', default=False, action='store_true',
+                    help='enable experimental fast-norm')
 parser.add_argument('--channels-last', action='store_true', default=False,
                     help='Use channels_last memory layout')
 parser.add_argument('--grad-checkpointing', action='store_true', default=False,
@@ -132,8 +134,6 @@ scripting_group.add_argument('--torchscript', dest='torchscript', action='store_
                     help='convert model torchscript for inference')
 scripting_group.add_argument('--aot-autograd', default=False, action='store_true',
                     help="Enable AOT Autograd support. (It's recommended to use this option with `--fuser nvfuser` together)")
-scripting_group.add_argument('--fast-norm', default=False, action='store_true',
-                    help='enable experimental fast-norm')
 
 # train optimizer parameters
 parser.add_argument('--opt', default='sgd', type=str, metavar='OPTIMIZER',
