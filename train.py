@@ -97,7 +97,7 @@ group.add_argument('--class-map', default='', type=str, metavar='FILENAME',
 # Model parameters
 group = parser.add_argument_group('Model parameters')
 group.add_argument('--model', default='resnet50', type=str, metavar='MODEL',
-                    help='Name of model to train (default: "resnet50"')
+                    help='Name of model to train (default: "resnet50")')
 group.add_argument('--pretrained', action='store_true', default=False,
                     help='Start with pretrained version of specified network (if avail)')
 group.add_argument('--initial-checkpoint', default='', type=str, metavar='PATH',
@@ -145,7 +145,7 @@ group.add_argument('--grad-checkpointing', action='store_true', default=False,
 # Optimizer parameters
 group = parser.add_argument_group('Optimizer parameters')
 group.add_argument('--opt', default='sgd', type=str, metavar='OPTIMIZER',
-                    help='Optimizer (default: "sgd"')
+                    help='Optimizer (default: "sgd")')
 group.add_argument('--opt-eps', default=None, type=float, metavar='EPSILON',
                     help='Optimizer Epsilon (default: None, use opt default)')
 group.add_argument('--opt-betas', default=None, type=float, nargs='+', metavar='BETA',
@@ -210,7 +210,7 @@ group.add_argument('--warmup-prefix', action='store_true', default=False,
 group.add_argument('--cooldown-epochs', type=int, default=0, metavar='N',
                     help='epochs to cooldown LR at min_lr, after cyclic schedule ends')
 group.add_argument('--patience-epochs', type=int, default=10, metavar='N',
-                    help='patience epochs for Plateau LR scheduler (default: 10')
+                    help='patience epochs for Plateau LR scheduler (default: 10)')
 group.add_argument('--decay-rate', '--dr', type=float, default=0.1, metavar='RATE',
                     help='LR decay rate (default: 0.1)')
 
@@ -407,7 +407,7 @@ def main():
 
     in_chans = 3
     if args.in_chans is not None:
-        in_chans = args.in_chanes
+        in_chans = args.in_chans
     elif args.input_size is not None:
         in_chans = args.input_size[0]
 
@@ -714,7 +714,7 @@ def main():
     elif resume_epoch is not None:
         start_epoch = resume_epoch
     if lr_scheduler is not None and start_epoch > 0:
-        if args.step_on_updates:
+        if args.sched_on_updates:
             lr_scheduler.step_update(start_epoch * updates_per_epoch)
         else:
             lr_scheduler.step(start_epoch)
