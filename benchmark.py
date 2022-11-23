@@ -25,7 +25,7 @@ from timm.optim import create_optimizer_v2
 from timm.utils import setup_default_logging, set_jit_fuser, decay_batch_step, check_batch_size_retry
 
 if os.getenv('TIMM_BENCHMARK_ENABLE_TORCHDYNAMO') == '1':
-    import torchdynamo
+    import torch._dynamo
 
 if os.getenv('TIMM_BENCHMARK_ENABLE_AOT_AUTOGRAD') == '1':
     from functorch.compile import memory_efficient_fusion
@@ -274,7 +274,7 @@ class BenchmarkRunner:
             self.model = memory_efficient_fusion(self.model)
 
         if os.getenv('TIMM_BENCHMARK_ENABLE_TORCHDYNAMO') == '1':
-            self.model = torchdynamo.optimize('aot_nvfuser')(self.model)
+            self.model = torch._dynamo.optimize('nvprims_nvfuser')(self.model)
 
         self.example_inputs = None
         self.num_warm_iter = num_warm_iter
