@@ -1,6 +1,7 @@
 import logging
 from .constants import *
 
+import argparse
 
 _logger = logging.getLogger(__name__)
 
@@ -12,6 +13,9 @@ def resolve_data_config(
         use_test_size=False,
         verbose=False
 ):
+    if isinstance(args, argparse.Namespace):
+        args = vars(args)
+
     new_config = {}
     default_cfg = default_cfg or {}
     if not default_cfg and model is not None and hasattr(model, 'default_cfg'):
