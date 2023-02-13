@@ -83,7 +83,7 @@ if len(os.getenv('TIMM_BENCHMARK_NVFUSER_SKIP_NODE_KINDS', '')) > 0:
             is_successful = False
             traceback.print_exc()
         finally:
-            print(f'{node_kind = }, {is_successful = }', file=sys.stderr)
+            print(f'{node_kind = }, {is_successful = }, *** This is not an error ***', file=sys.stderr)
 
 
 parser = argparse.ArgumentParser(description='PyTorch Benchmark')
