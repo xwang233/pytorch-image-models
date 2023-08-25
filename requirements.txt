@@ -2,4 +2,4 @@
 # torchvision
 pyyaml
 huggingface_hub
-safetensors>=0.2
+safetensors==0.3.2  # 0.3.3 doesn't have aarch64 pre-built binary from pypi, causing ARM build to fail, https://github.com/huggingface/safetensors/issues/346
