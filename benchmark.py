@@ -494,6 +494,7 @@ class TrainBenchmarkRunner(BenchmarkRunner):
                 for _ in range(self.num_warm_iter):
                     _warmup()
             torch.cuda.current_stream().wait_stream(s)
+            torch.cuda.synchronize()
 
             g = torch.cuda.CUDAGraph()
             with torch.cuda.graph(g):
