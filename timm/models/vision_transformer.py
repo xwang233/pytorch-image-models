@@ -1791,6 +1791,7 @@ default_cfgs = {
         mean=OPENAI_CLIP_MEAN, std=OPENAI_CLIP_STD, num_classes=512),
 
     'vit_wee_patch16_reg1_gap_256.sbb_in1k': _cfg(
+        hf_hub_id='timm/',
         input_size=(3, 256, 256), crop_pct=0.95),
     'vit_pwee_patch16_reg1_gap_256.sbb_in1k': _cfg(
         hf_hub_id='timm/',
@@ -2374,7 +2375,6 @@ def vit_base_patch16_clip_quickgelu_224(pretrained: bool = False, **kwargs) -> V
 def vit_large_patch14_clip_quickgelu_224(pretrained: bool = False, **kwargs) -> VisionTransformer:
     """ ViT-Large model (ViT-L/14) CLIP image tower w/ QuickGELU act
     """
-    from timm.layers import get_act_layer
     model_args = dict(
         patch_size=14, embed_dim=1024, depth=24, num_heads=16, pre_norm=True,
         norm_layer=nn.LayerNorm, act_layer='quick_gelu')
