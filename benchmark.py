@@ -32,6 +32,9 @@ if os.getenv('TIMM_BENCHMARK_ENABLE_TORCHDYNAMO') == '1':
 if os.getenv('TIMM_BENCHMARK_ENABLE_AOT_AUTOGRAD') == '1':
     from functorch.compile import memory_efficient_fusion
 
+if os.getenv('TIMM_BENCHMARK_ENABLE_THUNDER_COMPILE') == '1':
+    import thunder
+
 has_apex = False
 try:
     from apex import amp
@@ -150,6 +153,8 @@ scripting_group.add_argument('--torchcompile', nargs='?', type=str, default=None
                              help="Enable compilation w/ specified backend (default: inductor).")
 scripting_group.add_argument('--aot-autograd', default=False, action='store_true',
                              help="Enable AOT Autograd optimization.")
+scripting_group.add_argument('--thunder-compile', default=False, action='store_true',
+                             help="Enable Lightning Thunder optimization.")
 
 # train optimizer parameters
 parser.add_argument('--opt', default='sgd', type=str, metavar='OPTIMIZER',
@@ -246,6 +251,7 @@ class BenchmarkRunner:
             torchscript=False,
             torchcompile=None,
             aot_autograd=False,
+            thunder_compile=False,
             reparam=False,
             precision='float32',
             fuser='',
@@ -304,6 +310,9 @@ class BenchmarkRunner:
         elif aot_autograd:
             assert has_functorch, "functorch is needed for --aot-autograd"
             self.model = memory_efficient_fusion(self.model)
+            self.compiled = True
+        elif thunder_compile:
+            self.model = thunder.jit(self.model)
             self.compiled = True
 
         if os.getenv('TIMM_BENCHMARK_ENABLE_TORCHDYNAMO') == '1':
