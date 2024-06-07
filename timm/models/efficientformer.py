@@ -411,7 +411,7 @@ class EfficientFormer(nn.Module):
         self.stages = nn.Sequential(*stages)
 
         # Classifier head
-        self.num_features = embed_dims[-1]
+        self.num_features = self.head_hidden_size = embed_dims[-1]
         self.norm = norm_layer_cl(self.num_features)
         self.head_drop = nn.Dropout(drop_rate)
         self.head = nn.Linear(self.num_features, num_classes) if num_classes > 0 else nn.Identity()
@@ -446,7 +446,7 @@ class EfficientFormer(nn.Module):
             s.grad_checkpointing = enable
 
     @torch.jit.ignore
-    def get_classifier(self):
+    def get_classifier(self) -> nn.Module:
         return self.head, self.head_dist
 
     def reset_classifier(self, num_classes: int, global_pool: Optional[str] = None):
@@ -556,7 +556,7 @@ class EfficientFormer(nn.Module):
         return x
 
 
-def _checkpoint_filter_fn(state_dict, model):
+def checkpoint_filter_fn(state_dict, model):
     """ Remap original checkpoints -> timm """
     if 'stem.0.weight' in state_dict:
         return state_dict  # non-original checkpoint, no remapping needed
@@ -611,7 +611,7 @@ def _create_efficientformer(variant, pretrained=False, **kwargs):
     out_indices = kwargs.pop('out_indices', 4)
     model = build_model_with_cfg(
         EfficientFormer, variant, pretrained,
-        pretrained_filter_fn=_checkpoint_filter_fn,
+        pretrained_filter_fn=checkpoint_filter_fn,
         feature_cfg=dict(out_indices=out_indices, feature_cls='getter'),
         **kwargs,
     )
