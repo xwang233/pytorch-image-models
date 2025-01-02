@@ -1024,6 +1024,11 @@ default_cfgs = generate_default_cfgs({
     'mobilenetv4_conv_small.e1200_r224_in1k': _cfg(
         hf_hub_id='timm/',
         test_input_size=(3, 256, 256), test_crop_pct=0.95, interpolation='bicubic'),
+    'mobilenetv4_conv_small.e3600_r256_in1k': _cfg(
+        hf_hub_id='timm/',
+        mean=IMAGENET_INCEPTION_MEAN, std=IMAGENET_INCEPTION_STD,
+        input_size=(3, 256, 256), pool_size=(8, 8), crop_pct=0.95,
+        test_input_size=(3, 320, 320), test_crop_pct=1.0, interpolation='bicubic'),
     'mobilenetv4_conv_medium.e500_r256_in1k': _cfg(
         hf_hub_id='timm/',
         input_size=(3, 256, 256), pool_size=(8, 8),
@@ -1032,6 +1037,10 @@ default_cfgs = generate_default_cfgs({
         hf_hub_id='timm/',
         crop_pct=0.95, test_input_size=(3, 256, 256), test_crop_pct=1.0, interpolation='bicubic'),
 
+    'mobilenetv4_conv_medium.e250_r384_in12k_ft_in1k': _cfg(
+        hf_hub_id='timm/',
+        input_size=(3, 384, 384), pool_size=(12, 12),
+        crop_pct=0.95, interpolation='bicubic'),
     'mobilenetv4_conv_medium.e180_r384_in12k': _cfg(
         hf_hub_id='timm/',
         num_classes=11821,

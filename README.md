@@ -12,6 +12,33 @@
 
 ## What's New
 
+## Dec 31, 2024
+* `convnext_nano` 384x384 ImageNet-12k pretrain & fine-tune. https://huggingface.co/models?search=convnext_nano%20r384
+* Add AIM-v2 encoders from https://github.com/apple/ml-aim, see on Hub: https://huggingface.co/models?search=timm%20aimv2
+* Add PaliGemma2 encoders from https://github.com/google-research/big_vision to existing PaliGemma, see on Hub: https://huggingface.co/models?search=timm%20pali2
+* Add missing L/14 DFN2B 39B CLIP ViT, `vit_large_patch14_clip_224.dfn2b_s39b`
+* Fix existing RmsProp layer to match standard formulation, use PT 2.5 impl when possible. Move old impl to `SimpleNorm` layer, it's LN w/o centering or bias. There were only two `timm` models using it, and they have been updated.
+* Allow override of `cache_dir` arg for model creation
+* Pass through `trust_remote_code` for HF datasets wrapper
+* `inception_next_atto` model added by creator
+* Adan optimizer caution, and Lamb decoupled weighgt decay options
+* Some feature_info metadata fixed by https://github.com/brianhou0208
+* All OpenCLIP and JAX (CLIP, SigLIP, Pali, etc) model weights that used load time remapping were given their own HF Hub instances so that they work with `hf-hub:` based loading, and thus will work with new Transformers `TimmWrapperModel`
+
+## Nov 28, 2024
+* More optimizers
+  * Add MARS optimizer (https://arxiv.org/abs/2411.10438, https://github.com/AGI-Arena/MARS)
+  * Add LaProp optimizer (https://arxiv.org/abs/2002.04839, https://github.com/Z-T-WANG/LaProp-Optimizer)
+  * Add masking from 'Cautious Optimizers' (https://arxiv.org/abs/2411.16085, https://github.com/kyleliang919/C-Optim) to Adafactor, Adafactor Big Vision, AdamW (legacy), Adopt, Lamb, LaProp, Lion, NadamW, RMSPropTF, SGDW
+  * Cleanup some docstrings and type annotations re optimizers and factory
+* Add MobileNet-V4 Conv Medium models pretrained on in12k and fine-tuned in1k @ 384x384
+  * https://huggingface.co/timm/mobilenetv4_conv_medium.e250_r384_in12k_ft_in1k
+  * https://huggingface.co/timm/mobilenetv4_conv_medium.e250_r384_in12k
+  * https://huggingface.co/timm/mobilenetv4_conv_medium.e180_ad_r384_in12k
+  * https://huggingface.co/timm/mobilenetv4_conv_medium.e180_r384_in12k
+* Add small cs3darknet, quite good for the speed
+  * https://huggingface.co/timm/cs3darknet_focus_s.ra4_e3600_r256_in1k
+
 ## Nov 12, 2024
 * Optimizer factory refactor
   * New factory works by registering optimizers using an OptimInfo dataclass w/ some key traits
@@ -234,7 +261,7 @@ Add a set of new very well trained ResNet & ResNet-V2 18/34 (basic block) weight
 ### April 11, 2024
 * Prepping for a long overdue 1.0 release, things have been stable for a while now.
 * Significant feature that's been missing for a while, `features_only=True` support for ViT models with flat hidden states or non-std module layouts (so far covering  `'vit_*', 'twins_*', 'deit*', 'beit*', 'mvitv2*', 'eva*', 'samvit_*', 'flexivit*'`)
-* Above feature support achieved through a new `forward_intermediates()` API that can be used with a feature wrapping module or direclty.
+* Above feature support achieved through a new `forward_intermediates()` API that can be used with a feature wrapping module or directly.
 ```python
 model = timm.create_model('vit_base_patch16_224')
 final_feat, intermediates = model.forward_intermediates(input) 
@@ -463,20 +490,23 @@ Included optimizers available via `timm.optim.create_optimizer_v2` factory metho
 * `adahessian` by [David Samuel](https://github.com/davda54/ada-hessian) - https://arxiv.org/abs/2006.00719
 * `adamp` and `sgdp` by [Naver ClovAI](https://github.com/clovaai) - https://arxiv.org/abs/2006.08217
 * `adan` an implementation of Adan adapted from https://github.com/sail-sg/Adan - https://arxiv.org/abs/2208.06677
-* `adopt` - adapted from https://github.com/iShohei220/adopt - https://arxiv.org/abs/2411.02853
+* `adopt` ADOPT adapted from https://github.com/iShohei220/adopt - https://arxiv.org/abs/2411.02853
 * `lamb` an implementation of Lamb and LambC (w/ trust-clipping) cleaned up and modified to support use with XLA - https://arxiv.org/abs/1904.00962
+* `laprop` optimizer from https://github.com/Z-T-WANG/LaProp-Optimizer - https://arxiv.org/abs/2002.04839
 * `lars` an implementation of LARS and LARC (w/ trust-clipping) - https://arxiv.org/abs/1708.03888
 * `lion` and implementation of Lion adapted from https://github.com/google/automl/tree/master/lion - https://arxiv.org/abs/2302.06675
 * `lookahead` adapted from impl by [Liam](https://github.com/alphadl/lookahead.pytorch) - https://arxiv.org/abs/1907.08610
-* `madgrad` - and implementation of MADGRAD adapted from https://github.com/facebookresearch/madgrad - https://arxiv.org/abs/2101.11075
+* `madgrad` an implementation of MADGRAD adapted from https://github.com/facebookresearch/madgrad - https://arxiv.org/abs/2101.11075
+* `mars` MARS optimizer from https://github.com/AGI-Arena/MARS - https://arxiv.org/abs/2411.10438
 * `nadam` an implementation of Adam w/ Nesterov momentum
-* `nadamw` an impementation of AdamW (Adam w/ decoupled weight-decay) w/ Nesterov momentum. A simplified impl based on https://github.com/mlcommons/algorithmic-efficiency
+* `nadamw` an implementation of AdamW (Adam w/ decoupled weight-decay) w/ Nesterov momentum. A simplified impl based on https://github.com/mlcommons/algorithmic-efficiency
 * `novograd` by [Masashi Kimura](https://github.com/convergence-lab/novograd) - https://arxiv.org/abs/1905.11286
 * `radam` by [Liyuan Liu](https://github.com/LiyuanLucasLiu/RAdam) - https://arxiv.org/abs/1908.03265
 * `rmsprop_tf` adapted from PyTorch RMSProp by myself. Reproduces much improved Tensorflow RMSProp behaviour
 * `sgdw` and implementation of SGD w/ decoupled weight-decay
 * `fused<name>` optimizers by name with [NVIDIA Apex](https://github.com/NVIDIA/apex/tree/master/apex/optimizers) installed
 * `bnb<name>` optimizers by name with [BitsAndBytes](https://github.com/TimDettmers/bitsandbytes) installed
+* `cadamw`, `clion`, and more 'Cautious' optimizers from https://github.com/kyleliang919/C-Optim - https://arxiv.org/abs/2411.16085
 * `adam`, `adamw`, `rmsprop`, `adadelta`, `adagrad`, and `sgd` pass through to `torch.optim` implementations
 
 ### Augmentations

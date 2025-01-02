@@ -3,21 +3,19 @@
 These tests were adapted from PyTorch' optimizer tests.
 
 """
-import math
-import pytest
 import functools
+import importlib
+import os
 from copy import deepcopy
 
+import pytest
 import torch
-from torch.testing._internal.common_utils import TestCase
 from torch.nn import Parameter
+from torch.testing._internal.common_utils import TestCase
 
 from timm.optim import create_optimizer_v2, list_optimizers, get_optimizer_class, get_optimizer_info, OptimInfo
 from timm.optim import param_groups_layer_decay, param_groups_weight_decay
 from timm.scheduler import PlateauLRScheduler
-
-import importlib
-import os
 
 torch_backend = os.environ.get('TORCH_BACKEND')
 if torch_backend is not None:
@@ -299,27 +297,41 @@ def test_optim_factory(optimizer):
     opt_info = get_optimizer_info(optimizer)
     assert isinstance(opt_info, OptimInfo)
 
-    if not opt_info.second_order:  # basic tests don't support second order right now
-        # test basic cases that don't need specific tuning via factory test
-        _test_basic_cases(
-            lambda weight, bias: create_optimizer_v2([weight, bias], optimizer, lr=1e-3)
-        )
-        _test_basic_cases(
-            lambda weight, bias: create_optimizer_v2(
-                _build_params_dict(weight, bias, lr=1e-2),
-                optimizer,
-                lr=1e-3)
-        )
-        _test_basic_cases(
-            lambda weight, bias: create_optimizer_v2(
-                _build_params_dict_single(weight, bias, lr=1e-2),
-                optimizer,
-                lr=1e-3)
-        )
-        _test_basic_cases(
-            lambda weight, bias: create_optimizer_v2(
-                _build_params_dict_single(weight, bias, lr=1e-2), optimizer)
-        )
+    lr = (1e-2,) * 4
+    if optimizer in ('mars', 'nadam', 'claprop', 'crmsproptf', 'cadafactorbv', 'csgdw', 'clamb'):
+        lr = (1e-3,) * 4
+    elif optimizer in ('cmars',):
+        lr = (1e-4,) * 4
+
+    try:
+        if not opt_info.second_order:  # basic tests don't support second order right now
+            # test basic cases that don't need specific tuning via factory test
+            _test_basic_cases(
+                lambda weight, bias: create_optimizer_v2([weight, bias], optimizer, lr=lr[0])
+            )
+            _test_basic_cases(
+                lambda weight, bias: create_optimizer_v2(
+                    _build_params_dict(weight, bias, lr=lr[1]),
+                    optimizer,
+                    lr=lr[1] / 10)
+            )
+            _test_basic_cases(
+                lambda weight, bias: create_optimizer_v2(
+                    _build_params_dict_single(weight, bias, lr=lr[2]),
+                    optimizer,
+                    lr=lr[2] / 10)
+            )
+            _test_basic_cases(
+                lambda weight, bias: create_optimizer_v2(
+                    _build_params_dict_single(weight, bias, lr=lr[3]),
+                    optimizer)
+            )
+    except TypeError as e:
+        if 'radamw' in optimizer:
+            pytest.skip("Expected for 'radamw' (decoupled decay) to fail in older PyTorch versions.")
+        else:
+            raise e
+
 
 
 #@pytest.mark.parametrize('optimizer', ['sgd', 'momentum'])
@@ -376,10 +388,17 @@ def test_adam(optimizer):
 
 @pytest.mark.parametrize('optimizer',  ['adopt', 'adoptw'])
 def test_adopt(optimizer):
-    # FIXME rosenbrock is not passing for ADOPT
-    # _test_rosenbrock(
-    #     lambda params: create_optimizer_v2(params, optimizer, lr=1e-3)
-    # )
+    _test_rosenbrock(
+        lambda params: create_optimizer_v2(params, optimizer, lr=3e-3)
+    )
+    _test_model(optimizer, dict(lr=5e-2), after_step=1)  # note no convergence in first step for ADOPT
+
+
+@pytest.mark.parametrize('optimizer',  ['adan', 'adanw'])
+def test_adan(optimizer):
+    _test_rosenbrock(
+        lambda params: create_optimizer_v2(params, optimizer, lr=1e-3)
+    )
     _test_model(optimizer, dict(lr=5e-2), after_step=1)  # note no convergence in first step for ADOPT
 
 
@@ -432,6 +451,14 @@ def test_lamb(optimizer):
     _test_model(optimizer, dict(lr=1e-3))
 
 
+@pytest.mark.parametrize('optimizer', ['laprop'])
+def test_laprop(optimizer):
+    _test_rosenbrock(
+        lambda params: create_optimizer_v2(params, optimizer, lr=1e-2)
+    )
+    _test_model(optimizer, dict(lr=1e-2))
+
+
 @pytest.mark.parametrize('optimizer',  ['lars', 'larc', 'nlars', 'nlarc'])
 def test_lars(optimizer):
     _test_rosenbrock(
@@ -446,6 +473,14 @@ def test_madgrad(optimizer):
         lambda params: create_optimizer_v2(params, optimizer, lr=1e-2)
     )
     _test_model(optimizer, dict(lr=1e-2))
+
+
+@pytest.mark.parametrize('optimizer',  ['mars'])
+def test_mars(optimizer):
+    _test_rosenbrock(
+        lambda params: create_optimizer_v2(params, optimizer, lr=1e-3)
+    )
+    _test_model(optimizer, dict(lr=5e-2), after_step=1)  # note no convergence in first step for ADOPT
 
 
 @pytest.mark.parametrize('optimizer',  ['novograd'])
