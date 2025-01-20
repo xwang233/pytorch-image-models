@@ -81,17 +81,17 @@ group = parser.add_argument_group('Dataset parameters')
 # Keep this argument outside the dataset group because it is positional.
 parser.add_argument('data', nargs='?', metavar='DIR', const=None,
                     help='path to dataset (positional is *deprecated*, use --data-dir)')
-parser.add_argument('--data-dir', metavar='DIR',
+group.add_argument('--data-dir', metavar='DIR',
                     help='path to dataset (root dir)')
-parser.add_argument('--dataset', metavar='NAME', default='',
+group.add_argument('--dataset', metavar='NAME', default='',
                     help='dataset type + name ("<type>/<name>") (default: ImageFolder or ImageTar if empty)')
 group.add_argument('--train-split', metavar='NAME', default='train',
                    help='dataset train split (default: train)')
 group.add_argument('--val-split', metavar='NAME', default='validation',
                    help='dataset validation split (default: validation)')
-parser.add_argument('--train-num-samples', default=None, type=int,
+group.add_argument('--train-num-samples', default=None, type=int,
                     metavar='N', help='Manually specify num samples in train split, for IterableDatasets.')
-parser.add_argument('--val-num-samples', default=None, type=int,
+group.add_argument('--val-num-samples', default=None, type=int,
                     metavar='N', help='Manually specify num samples in validation split, for IterableDatasets.')
 group.add_argument('--dataset-download', action='store_true', default=False,
                    help='Allow download of dataset for torch/ and tfds/ datasets that support it.')
@@ -128,8 +128,7 @@ group.add_argument('--img-size', type=int, default=None, metavar='N',
                    help='Image size (default: None => model default)')
 group.add_argument('--in-chans', type=int, default=None, metavar='N',
                    help='Image input channels (default: None => 3)')
-group.add_argument('--input-size', default=None, nargs=3, type=int,
-                   metavar='N N N',
+group.add_argument('--input-size', default=None, nargs=3, type=int, metavar='N',
                    help='Input all image dimensions (d h w, e.g. --input-size 3 224 224), uses model default if empty')
 group.add_argument('--crop-pct', default=None, type=float,
                    metavar='N', help='Input image center crop percent (for validation only)')
@@ -185,7 +184,7 @@ group.add_argument('--no-ddp-bb', action='store_true', default=False,
 group.add_argument('--synchronize-step', action='store_true', default=False,
                    help='torch.cuda.synchronize() end of each step')
 group.add_argument("--local_rank", default=0, type=int)
-parser.add_argument('--device-modules', default=None, type=str, nargs='+',
+group.add_argument('--device-modules', default=None, type=str, nargs='+',
                     help="Python imports for device backend modules.")
 
 # Optimizer parameters
